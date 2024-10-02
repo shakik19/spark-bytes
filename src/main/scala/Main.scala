@@ -62,8 +62,7 @@ object Main {
     val openPercentage2 = concat(round(openPercentage, 2).cast(StringType), lit("%"))
     df.select(openPercentage2.as("Open%")).show(10)
 
-    // returns a new Column. If equal then the row is true and false otherwise
-    val equalOpenClose = df("Open") === df("Close") alias "equalOpenClose"
+
     /*
      === equality operator is specially for columns; isEqual method can be used as well
      =!= means notEqual
@@ -76,8 +75,32 @@ object Main {
      cast etc.
      */
 
+    // returns a new Column. If equal then the row is true and false otherwise
+    val equalOpenClose = df("Open") === df("Close") alias "equalOpenClose"
+
     //                                                           row[i]   cached as it's repeated next line
     println(s"equalOpenClose : ${df.select(equalOpenClose).filter(_(0) == true).cache().count()}")
-    df.select(equalOpenClose).filter(_.get(0) == true).show(30)
+    df.select(col("Open"), col("Close"), equalOpenClose).filter(_.get(2) == true).show(30)
+
+    // Adding a new Column with given column or given expression (matches for every row)
+    df.withColumn("isOpenEqualClose", $"Open" === $"Close").select($"Open", $"Close", $"isOpenEqualClose").show
+
+
+    /**
+     *? Task: Find the maximum volume of share for every month in ascending order.
+     */
+    df.createOrReplaceTempView("df")
+    spark.sql(
+      """
+        |SELECT
+        | DATE_FORMAT(df.Date, "MM-yy") AS month,
+        | MAX(Volume)
+        |FROM
+        | df
+        |GROUP BY
+        | 1
+        |ORDER BY
+        | 1
+        |""".stripMargin).show()
   }
 }
