@@ -5,7 +5,7 @@ import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.types._
 
 import scala.::
-object Main {
+object ColumnFunctionality {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
       .appName("spark-local")
