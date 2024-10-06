@@ -1,6 +1,6 @@
 package com.shakik.spark
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{col, date_format, max}
 
 object TaskSet1 {
@@ -57,31 +57,43 @@ object TaskSet1 {
     /**
      * ? Task 3: Find the days when 'close' price was more that 10% higher than open
      */
-    df2.select($"date", $"open", $"close")
-      .where($"close" > $"open" * 1.10)
-      .show()
+    val task3DF = task3(df2)
+    task3DF.show(100)
+    println(task3ResultCount(task3DF))
+      //    df2.select($"date", $"open", $"close")
+      //      .where($"close" > $"open" * 1.10)
+      //      .show()
 
-    /**
-     * ? Task 4: Find the maximum volume of share for every month in ascending order.
-     */
-    df2.createOrReplaceTempView("df")
-    spark.sql(
-      """
-        |SELECT
-        | DATE_FORMAT(df.date, "MM-yy") AS month,
-        | MAX(volume) AS max_volume
-        |FROM
-        | df
-        |GROUP BY
-        | 1
-        |ORDER BY
-        | 1
-        |""".stripMargin).show()
+      /**
+       * ? Task 4: Find the maximum volume of share for every month in ascending order.
+       */
+      df2.createOrReplaceTempView("df")
+      spark.sql(
+        """
+          |SELECT
+          | DATE_FORMAT(df.date, "MM-yy") AS month,
+          | MAX(volume) AS max_volume
+          |FROM
+          | df
+          |GROUP BY
+          | 1
+          |ORDER BY
+          | 1
+          |""".stripMargin).show()
     // Equivalent Code
     df2.withColumn("month", date_format(col("date"), "MMM-yyyy"))
       .groupBy("month")
       .agg(max("volume").as("max_volume"))
       .orderBy($"max_volume".desc_nulls_first)
       .show()
+  }
+
+  def task3(df: DataFrame): DataFrame = {
+    df.select(df("date"), df("open"), df("close"))
+      .where(df("close") > df("open") * 1.10)
+  }
+
+  def task3ResultCount(df: DataFrame): Long = {
+    task3(df).count()
   }
 }
